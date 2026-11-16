@@ -1,0 +1,390 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Men's shirt, t-shirt, or polo t-shirt in the Prime Look catalog.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sku": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Shirts", "T-Shirts", "Polo T-Shirts"]
+        },
+        "priceInr": {
+          "type": "number"
+        },
+        "discountPercent": {
+          "type": "number",
+          "description": "Optional per-product percentage discount (0-90)."
+        },
+        "image": {
+          "type": "string",
+          "maxLength": 450000
+        },
+        "galleryImages": {
+          "type": "array",
+          "description": "Up to 5 detail images for the garment gallery."
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1200
+        },
+        "fabric": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "origin": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "fitNotes": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "sizes": {
+          "type": "array"
+        },
+        "colors": {
+          "type": "array"
+        },
+        "stock": {
+          "type": "object"
+        },
+        "featured": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "sku",
+        "name",
+        "category",
+        "priceInr",
+        "image",
+        "description",
+        "fabric",
+        "origin",
+        "fitNotes",
+        "sizes",
+        "colors",
+        "stock",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StorefrontSettings": {
+      "title": "StorefrontSettings",
+      "description": "Store branding, custom logo, owner contact details, and shipping/return policy configuration.",
+      "type": "object",
+      "properties": {
+        "logoDataUrl": {
+          "type": "string",
+          "maxLength": 450000
+        },
+        "showWordmark": {
+          "type": "boolean"
+        },
+        "brandName": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "tagline": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "address": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "showrooms": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "hours": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "freeShippingAboveInr": {
+          "type": "number"
+        },
+        "shippingChargeInr": {
+          "type": "number"
+        },
+        "returnWindowDays": {
+          "type": "number"
+        },
+        "deliveryDaysText": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "returnDeductionText": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "discountEnabled": {
+          "type": "boolean"
+        },
+        "discountTitle": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "discountType": {
+          "type": "string",
+          "enum": ["percent", "flat"]
+        },
+        "discountValue": {
+          "type": "number"
+        },
+        "discountCode": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "discountMinOrderInr": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "showWordmark",
+        "brandName",
+        "tagline",
+        "phone",
+        "email",
+        "address",
+        "showrooms",
+        "hours",
+        "freeShippingAboveInr",
+        "shippingChargeInr",
+        "returnWindowDays",
+        "deliveryDaysText",
+        "returnDeductionText",
+        "updatedAt"
+      ]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order placed from the storefront checkout.",
+      "type": "object",
+      "properties": {
+        "orderNumber": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "customerName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "address": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "city": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "pinCode": {
+          "type": "string",
+          "maxLength": 12
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": [
+            "UPI (GPay / PhonePe)",
+            "Credit / Debit Card",
+            "NetBanking",
+            "Cash on Delivery (COD)"
+          ]
+        },
+        "items": {
+          "type": "array"
+        },
+        "subtotalInr": {
+          "type": "number"
+        },
+        "discountInr": {
+          "type": "number"
+        },
+        "discountCode": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "shippingInr": {
+          "type": "number"
+        },
+        "totalInr": {
+          "type": "number"
+        },
+        "estimatedDelivery": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "status": {
+          "type": "string",
+          "enum": ["placed", "confirmed", "shipped", "delivered", "cancelled"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "orderNumber",
+        "customerName",
+        "phone",
+        "email",
+        "address",
+        "city",
+        "pinCode",
+        "paymentMethod",
+        "items",
+        "subtotalInr",
+        "shippingInr",
+        "totalInr",
+        "estimatedDelivery",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized store owner/admin record keyed by Firebase Auth UID.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "role": {
+          "type": "string",
+          "enum": ["owner"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["email", "role", "createdAt"]
+    },
+    "CustomerVisit": {
+      "title": "CustomerVisit",
+      "description": "Non-owner customer website visit record for real-time storefront visitor tracking.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "visitorId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "isReturning": {
+          "type": "boolean"
+        },
+        "deviceType": {
+          "type": "string",
+          "enum": ["Mobile", "Tablet", "Desktop"]
+        },
+        "browser": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "referrer": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "landingPath": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "screenSize": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "visitorId",
+        "isReturning",
+        "deviceType",
+        "browser",
+        "referrer",
+        "landingPath",
+        "screenSize",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Publicly readable menswear catalog managed exclusively by verified store owners."
+    },
+    "/storefront/{docId}": {
+      "schema": { "$ref": "#/entities/StorefrontSettings" },
+      "description": "Publicly readable brand logo, contact info, and policy settings managed exclusively by verified store owners."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer orders containing PII; creatable by shoppers at checkout, readable and manageable strictly by verified store owners."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Allowlist of verified owner UIDs; readable only by the owner themselves or existing admins."
+    },
+    "/visits/{visitId}": {
+      "schema": { "$ref": "#/entities/CustomerVisit" },
+      "description": "Customer-only storefront visits; writable on visitor arrival and readable/deletable strictly by verified store owners."
+    }
+  }
+}

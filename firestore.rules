@@ -1,0 +1,273 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (Default Deny Catch-All)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Reusable Global Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'r17rajput@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // 3. Entity Validation Blueprints
+    function isValidProduct(data) {
+      return data.keys().hasAll([
+          'id', 'sku', 'name', 'category', 'priceInr', 'image',
+          'description', 'fabric', 'origin', 'fitNotes',
+          'sizes', 'colors', 'stock', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'sku', 'name', 'category', 'priceInr', 'discountPercent', 'image', 'galleryImages',
+          'description', 'fabric', 'origin', 'fitNotes',
+          'sizes', 'colors', 'stock', 'featured', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.sku is string && data.sku.size() >= 1 && data.sku.size() <= 40
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 160
+        && data.category is string && data.category.size() <= 30
+        && data.category in ['Shirts', 'T-Shirts', 'Polo T-Shirts']
+        && data.priceInr is number && data.priceInr > 0 && data.priceInr <= 1000000
+        && (!('discountPercent' in data) || (data.discountPercent is number && data.discountPercent >= 0 && data.discountPercent <= 90))
+        && data.image is string && data.image.size() >= 1 && data.image.size() <= 450000
+        && (!('galleryImages' in data) || (
+          data.galleryImages is list
+          && data.galleryImages.size() <= 6
+          && (data.galleryImages.size() == 0 || (data.galleryImages[0] is string && data.galleryImages[0].size() <= 450000))
+        ))
+        && data.description is string && data.description.size() >= 1 && data.description.size() <= 1200
+        && data.fabric is string && data.fabric.size() >= 1 && data.fabric.size() <= 200
+        && data.origin is string && data.origin.size() >= 1 && data.origin.size() <= 200
+        && data.fitNotes is string && data.fitNotes.size() >= 1 && data.fitNotes.size() <= 300
+        && data.sizes is list && data.sizes.size() >= 1 && data.sizes.size() <= 12
+        && data.sizes[0] is string && data.sizes[0].size() >= 1 && data.sizes[0].size() <= 24
+        && data.colors is list && data.colors.size() >= 1 && data.colors.size() <= 12
+        && data.colors[0] is map
+        && data.stock is map
+        && (!('featured' in data) || data.featured is bool)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidStorefrontSettings(data) {
+      return data.keys().hasAll([
+          'showWordmark', 'brandName', 'tagline', 'phone', 'email',
+          'address', 'showrooms', 'hours', 'freeShippingAboveInr',
+          'shippingChargeInr', 'returnWindowDays', 'deliveryDaysText',
+          'returnDeductionText', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'logoDataUrl', 'showWordmark', 'brandName', 'tagline', 'phone', 'email',
+          'address', 'showrooms', 'hours', 'freeShippingAboveInr',
+          'shippingChargeInr', 'returnWindowDays', 'deliveryDaysText',
+          'returnDeductionText', 'discountEnabled', 'discountTitle',
+          'discountType', 'discountValue', 'discountCode',
+          'discountMinOrderInr', 'updatedAt'
+        ])
+        && (!('logoDataUrl' in data) || data.logoDataUrl == null || (data.logoDataUrl is string && data.logoDataUrl.size() <= 450000))
+        && data.showWordmark is bool
+        && data.brandName is string && data.brandName.size() >= 1 && data.brandName.size() <= 80
+        && data.tagline is string && data.tagline.size() >= 1 && data.tagline.size() <= 100
+        && data.phone is string && data.phone.size() >= 4 && data.phone.size() <= 40
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 120
+        && data.address is string && data.address.size() >= 4 && data.address.size() <= 300
+        && data.showrooms is string && data.showrooms.size() >= 2 && data.showrooms.size() <= 300
+        && data.hours is string && data.hours.size() >= 2 && data.hours.size() <= 120
+        && data.freeShippingAboveInr is number && data.freeShippingAboveInr >= 0 && data.freeShippingAboveInr <= 100000
+        && data.shippingChargeInr is number && data.shippingChargeInr >= 0 && data.shippingChargeInr <= 10000
+        && data.returnWindowDays is number && data.returnWindowDays >= 1 && data.returnWindowDays <= 60
+        && data.deliveryDaysText is string && data.deliveryDaysText.size() >= 2 && data.deliveryDaysText.size() <= 120
+        && data.returnDeductionText is string && data.returnDeductionText.size() >= 2 && data.returnDeductionText.size() <= 240
+        && (!('discountEnabled' in data) || data.discountEnabled is bool)
+        && (!('discountTitle' in data) || (data.discountTitle is string && data.discountTitle.size() <= 80))
+        && (!('discountType' in data) || (data.discountType is string && data.discountType.size() <= 16 && data.discountType in ['percent', 'flat']))
+        && (!('discountValue' in data) || (data.discountValue is number && data.discountValue >= 0 && data.discountValue <= 100000))
+        && (!('discountCode' in data) || (data.discountCode is string && data.discountCode.size() <= 32))
+        && (!('discountMinOrderInr' in data) || (data.discountMinOrderInr is number && data.discountMinOrderInr >= 0 && data.discountMinOrderInr <= 500000))
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll([
+          'orderNumber', 'customerName', 'phone', 'email', 'address',
+          'city', 'pinCode', 'paymentMethod', 'items', 'subtotalInr',
+          'shippingInr', 'totalInr', 'estimatedDelivery', 'status',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'orderNumber', 'customerName', 'phone', 'email', 'address',
+          'city', 'pinCode', 'paymentMethod', 'items', 'subtotalInr',
+          'discountInr', 'discountCode', 'shippingInr', 'totalInr',
+          'estimatedDelivery', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.orderNumber is string && data.orderNumber.size() >= 4 && data.orderNumber.size() <= 40
+        && data.customerName is string && data.customerName.size() >= 2 && data.customerName.size() <= 120
+        && data.phone is string && data.phone.size() >= 6 && data.phone.size() <= 30
+        && data.email is string && data.email.size() >= 5 && data.email.size() <= 160
+        && data.address is string && data.address.size() >= 4 && data.address.size() <= 300
+        && data.city is string && data.city.size() >= 2 && data.city.size() <= 100
+        && data.pinCode is string && data.pinCode.size() >= 4 && data.pinCode.size() <= 12
+        && data.paymentMethod is string && data.paymentMethod.size() <= 40
+        && data.paymentMethod in [
+          'UPI (GPay / PhonePe)',
+          'Credit / Debit Card',
+          'NetBanking',
+          'Cash on Delivery (COD)'
+        ]
+        && data.items is list && data.items.size() >= 1 && data.items.size() <= 50
+        && data.items[0] is map
+        && data.subtotalInr is number && data.subtotalInr > 0 && data.subtotalInr <= 5000000
+        && (!('discountInr' in data) || (data.discountInr is number && data.discountInr >= 0 && data.discountInr <= 5000000))
+        && (!('discountCode' in data) || (data.discountCode is string && data.discountCode.size() <= 32))
+        && data.shippingInr is number && data.shippingInr >= 0 && data.shippingInr <= 10000
+        && data.totalInr is number && data.totalInr > 0 && data.totalInr <= 5010000
+        && data.estimatedDelivery is string && data.estimatedDelivery.size() >= 2 && data.estimatedDelivery.size() <= 100
+        && data.status is string && data.status.size() <= 20
+        && data.status in ['placed', 'confirmed', 'shipped', 'delivered', 'cancelled']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['email', 'role', 'createdAt'])
+        && data.keys().hasOnly(['email', 'role', 'createdAt'])
+        && data.email is string && data.email.size() >= 5 && data.email.size() <= 160
+        && data.role is string && data.role.size() <= 16 && data.role == 'owner'
+        && data.createdAt is timestamp;
+    }
+
+    function isValidVisit(data) {
+      return data.keys().hasAll([
+          'id', 'visitorId', 'isReturning', 'deviceType', 'browser',
+          'referrer', 'landingPath', 'screenSize', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'visitorId', 'isReturning', 'deviceType', 'browser',
+          'referrer', 'landingPath', 'screenSize', 'createdAt'
+        ])
+        && isValidId(data.id)
+        && isValidId(data.visitorId)
+        && data.isReturning is bool
+        && data.deviceType is string && data.deviceType.size() <= 16
+        && data.deviceType in ['Mobile', 'Tablet', 'Desktop']
+        && data.browser is string && data.browser.size() >= 1 && data.browser.size() <= 60
+        && data.referrer is string && data.referrer.size() >= 1 && data.referrer.size() <= 200
+        && data.landingPath is string && data.landingPath.size() >= 1 && data.landingPath.size() <= 160
+        && data.screenSize is string && data.screenSize.size() >= 3 && data.screenSize.size() <= 32
+        && data.createdAt is timestamp;
+    }
+
+    // 4. Collection Rules
+    match /products/{productId} {
+      allow get: if isValidId(productId);
+      allow list: if true;
+      allow create: if isValidId(productId)
+        && isValidProduct(incoming())
+        && incoming().id == productId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && isAdmin();
+      allow update: if isValidId(productId)
+        && isValidProduct(incoming())
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'sku', 'name', 'category', 'priceInr', 'discountPercent', 'image', 'galleryImages',
+          'description', 'fabric', 'origin', 'fitNotes',
+          'sizes', 'colors', 'stock', 'featured', 'updatedAt'
+        ])
+        && isAdmin();
+      allow delete: if isValidId(productId) && isAdmin();
+    }
+
+    match /storefront/{docId} {
+      allow get: if isValidId(docId) && docId == 'settings';
+      allow list: if false;
+      allow create: if isValidId(docId)
+        && docId == 'settings'
+        && isValidStorefrontSettings(incoming())
+        && incoming().updatedAt == request.time
+        && isAdmin();
+      allow update: if isValidId(docId)
+        && docId == 'settings'
+        && isValidStorefrontSettings(incoming())
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'logoDataUrl', 'showWordmark', 'brandName', 'tagline', 'phone', 'email',
+          'address', 'showrooms', 'hours', 'freeShippingAboveInr',
+          'shippingChargeInr', 'returnWindowDays', 'deliveryDaysText',
+          'returnDeductionText', 'discountEnabled', 'discountTitle',
+          'discountType', 'discountValue', 'discountCode',
+          'discountMinOrderInr', 'updatedAt'
+        ])
+        && isAdmin();
+      allow delete: if false;
+    }
+
+    match /orders/{orderId} {
+      allow get: if isValidId(orderId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(orderId)
+        && isValidOrder(incoming())
+        && incoming().status == 'placed'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(orderId)
+        && isValidOrder(incoming())
+        && incoming().orderNumber == existing().orderNumber
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && isAdmin();
+      allow delete: if isValidId(orderId) && isAdmin();
+    }
+
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(adminId)
+        && isValidAdminUser(incoming())
+        && incoming().createdAt == request.time
+        && isAdmin();
+      allow update: if false;
+      allow delete: if isValidId(adminId) && isAdmin();
+    }
+
+    match /visits/{visitId} {
+      allow get: if isValidId(visitId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(visitId)
+        && isValidVisit(incoming())
+        && incoming().id == visitId
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(visitId) && isAdmin();
+    }
+  }
+}

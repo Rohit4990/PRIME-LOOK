@@ -1,0 +1,8 @@
+{
+  "name": "Marlowe Atelier",
+  "description": "India's luxury men's shirts and heavyweight Supima t-shirts flagship store.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
